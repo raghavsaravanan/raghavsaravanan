@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["scripts/**", "data/projects.json", ".github/workflows/refresh.yml"]
+    paths: ["scripts/**", "data/projects.json", "data/links.json", ".github/workflows/refresh.yml"]
 
 permissions:
   contents: write

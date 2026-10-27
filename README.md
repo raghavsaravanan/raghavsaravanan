@@ -42,10 +42,11 @@
 
 <h3><code>raghav@github ~ $ ./links.sh</code></h3>
 
-<p><b>AI Engineer Intern @ bondingAI · Full-stack developer · Hackathon builder</b></p>
+<p><b>AI Engineer Intern @ bondingAI</b></p>
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-raghavsaravanan-0A66C2?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTQuOTggMy41QzQuOTggNC44OCAzLjg3IDYgMi41IDZTMCA0Ljg4IDAgMy41IDEuMTIgMSAyLjUgMXMyLjQ4IDEuMTIgMi40OCAyLjV6TS4yMiA4aDQuNTZ2MTRILjIyek04LjM0IDhoNC4zN3YxLjkyaC4wNmMuNjEtMS4xNSAyLjEtMi4zNyA0LjMyLTIuMzcgNC42MiAwIDUuNDcgMy4wNCA1LjQ3IDdWMjJoLTQuNTZ2LTYuNmMwLTEuNTgtLjAzLTMuNi0yLjItMy42LTIuMiAwLTIuNTMgMS43Mi0yLjUzIDMuNDlWMjJIOC4zNHoiLz48L3N2Zz4=)](https://www.linkedin.com/in/raghavsaravanan/)
-[![Devpost](https://img.shields.io/badge/Devpost-raghavsaravanan-003E54?style=for-the-badge&logo=devpost&logoColor=white)](https://devpost.com/raghavsaravanan)
-[![Email](https://img.shields.io/badge/Email-raghav.saravanan18%40gmail.com-0d1117?style=for-the-badge&logo=gmail&logoColor=white)](mailto:raghav.saravanan18@gmail.com)
+<a href="https://bondingai.io"><img src="./assets/links/bondingai.svg" width="420" alt="bondingAI: bondingai.io" /></a><br>
+<a href="https://www.linkedin.com/in/raghavsaravanan/"><img src="./assets/links/linkedin.svg" width="420" alt="LinkedIn: in/raghavsaravanan" /></a><br>
+<a href="https://devpost.com/raghavsaravanan"><img src="./assets/links/devpost.svg" width="420" alt="Devpost: devpost.com/raghavsaravanan" /></a><br>
+<a href="mailto:raghav.saravanan18@gmail.com"><img src="./assets/links/email.svg" width="420" alt="Email: raghav.saravanan18@gmail.com" /></a>
 
 </div>

@@ -7,3 +7,4 @@ python3 fetch_stats.py
 python3 render_heatmap.py
 python3 render_stats.py
 python3 render_projects.py
+python3 render_links.py
