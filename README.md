@@ -3,6 +3,13 @@
 <!-- Portrait + stats are both 840x880 so equal display widths give equal heights.
      Regenerate: scripts/make_portrait.py and scripts/make_farm_scene.py (static art), scripts/refresh.sh (everything else). -->
 
+<h3><code>raghav@github ~ $ ./farm.sh</code></h3>
+
+<img src="./assets/farm.svg" width="840" alt="Raghav's contributions as an ASCII farm: each day is a plot that grows by commit count, tilled by a tractor doing laps, with a flock of chickens on bug patrol. Refreshed daily." />
+
+<br>
+<br>
+
 <h3><code>raghav@github ~ $ whoami</code></h3>
 
 <table>
@@ -12,13 +19,6 @@
 </tr>
 </table>
 
-<br>
-
-<h3><code>raghav@github ~ $ ./contributions.sh</code></h3>
-
-<img src="./assets/heatmap.svg" width="840" alt="Raghav's GitHub contribution graph for the last year, refreshed daily" />
-
-<br>
 <br>
 
 <h3><code>raghav@github ~ $ ls ~/projects</code></h3>
@@ -38,13 +38,6 @@
 </tr>
 </table>
 
-<br>
-
-<h3><code>raghav@github ~ $ ./farm.sh</code></h3>
-
-<img src="./assets/farm.svg" width="840" alt="Raghav's contributions as an ASCII farm: each day is a plot that grows by commit count, tilled by a tractor, with a flock of chickens on bug patrol. Refreshed daily." />
-
-<br>
 <br>
 
 <h3><code>raghav@github ~ $ ./links.sh</code></h3>

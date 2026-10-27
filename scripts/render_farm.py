@@ -4,9 +4,10 @@ Render the last year of contributions as an ASCII farm in the portrait's style.
 
 The landscape (mountains, sun, pines, barn, silo) comes from
 data/farm_scene.json, painted and converted to ASCII by make_farm_scene.py.
-The scenery prints in under a scanline, then the tractor drives across the field:
-each week's column turns from grass to crops as it passes, and every day's crop
-grows denser with that day's contribution level. Chickens keep pecking in the yard.
+The scenery prints in under a scanline, then the tractor starts doing laps of the
+field. On its first pass each week's column turns from grass to crops, and every
+day's crop grows denser with that day's contribution level. After that it keeps
+circling, wheels spinning, while the chickens peck in the yard.
 
 Drawn at 2x and shown at half size in the README.
 
@@ -37,7 +38,6 @@ GRASS = YARD_TOP + 5
 ROWS = GRASS + 1
 FIELD_C0 = 23
 PLOT_W = 3
-TRACTOR_C0 = 40
 
 GREENS = ["#2ea043", "#3fb950", "#56d364"]
 SOIL = "#7a6244"
@@ -68,7 +68,8 @@ CHICK = ["(.>", " ^ "]
 
 PRINT_TIME = 1.2
 DRIVE_START = PRINT_TIME + 0.1
-DRIVE = 4.5
+LAP = 9.0                            # seconds per lap; the first lap tills the field
+TRACTOR_PARK_C = 150                 # where it sits if the viewer prefers reduced motion
 
 CSS = (
     "@keyframes print{from{opacity:0}to{opacity:1}}"
@@ -87,6 +88,9 @@ CSS = (
     ".p{animation:peck 2.4s ease-in-out infinite}"
     "@keyframes wander{0%,100%{transform:none}50%{transform:translateX(90px)}}"
     ".wa{animation:wander 10s ease-in-out infinite}"
+    "@keyframes spin{0%,49%{opacity:1}50%,100%{opacity:0}}"
+    ".ha{animation:spin .36s step-end infinite}"
+    ".hb{animation:spin .36s step-end -.18s infinite}"
 )
 
 
@@ -172,18 +176,21 @@ def main():
     cols = scene["cols"]
     width = X0 * 2 + cols * CW
 
+    # The tractor laps from just off the left edge of the scene to just off the right.
     tractor_w = len(TRACTOR[0]) * CW
-    start_x = cx(TRACTOR_C0)
-    end_x = cx(cols - len(TRACTOR[0]) - 30)
+    park_x = cx(TRACTOR_PARK_C)
+    enter_x, exit_x = cx(0) - tractor_w, cx(cols)
 
     def till_time(col):
-        progress = (cx(col) - start_x - tractor_w / 2) / (end_x - start_x)
-        return DRIVE_START + DRIVE * min(max(progress, 0), 1)
+        """When the middle of the tractor first passes this column."""
+        progress = (cx(col) - enter_x - tractor_w / 2) / (exit_x - enter_x)
+        return DRIVE_START + LAP * progress
 
     footer_top = ART_TOP + ROWS * CH + 18
     height = footer_top + 108
-    css = CSS + (f"@keyframes drive{{to{{transform:translateX({end_x - start_x:.1f}px)}}}}"
-                 f".tr{{animation:drive {DRIVE}s linear {DRIVE_START}s both}}")
+    css = CSS + (f"@keyframes drive{{from{{transform:translateX({enter_x - park_x:.1f}px)}}"
+                 f"to{{transform:translateX({exit_x - park_x:.1f}px)}}}}"
+                 f".tr{{animation:drive {LAP}s linear {DRIVE_START}s infinite both}}")
     parts = window(width, height, f"~$ ./farm.sh --season {data['range']['end'][:4]}", scale=SCALE, css=css)
 
     # Scenery prints top to bottom under a scanline, like the portrait.
@@ -227,16 +234,26 @@ def main():
     # Tractor, driving along the meadow from beside the barn to the far end, puffing exhaust.
     def tractor_color(i, j, ch):
         if i >= 4:
-            return GOLD if ch == "o" else SOFT_INK
+            return GOLD if ch in "o+" else SOFT_INK
         return "#3fb950"
 
     tractor_row = SCENE_ROWS - len(TRACTOR)
-    parts.append(f'<g transform="translate({start_x - cx(0):.1f} 0)"><g class="tr">')
-    parts += sprite_svg(TRACTOR, tractor_row, 0, tractor_color, backing=True)
+    hubs = TRACTOR.index(next(line for line in TRACTOR if "(o)" in line))
+    spun = TRACTOR[hubs].replace("(o)", "(+)")
+    parts.append(f'<clipPath id="lane"><rect x="{cx(0)}" y="{ART_TOP}" width="{cols * CW}" '
+                 f'height="{SCENE_ROWS * CH}"/></clipPath>')
+    parts.append(f'<g clip-path="url(#lane)"><g transform="translate({park_x - cx(0):.1f} 0)"><g class="tr">')
+    frame = [line if i != hubs else " " * len(line) for i, line in enumerate(TRACTOR)]
+    parts += sprite_svg(frame, tractor_row, 0, tractor_color, backing=True)
+    # Hubs alternate between (o) and (+) so the wheels look like they're turning.
+    parts += sprite_svg([TRACTOR[hubs]], tractor_row + hubs, 0, lambda i, j, ch: tractor_color(hubs, j, ch),
+                        cls="ha", backing=True)
+    parts += sprite_svg([spun], tractor_row + hubs, 0, lambda i, j, ch: tractor_color(hubs, j, ch),
+                        cls="hb cf", backing=True)
     for k, delay in enumerate([0, 0.7, 1.4]):
         parts.append(f'<text class="pf" x="{cx(16):.1f}" y="{cy(tractor_row - 1):.1f}" fill="#8b949e" '
                      f'font-size="{FONT_SIZE + k * 2:.1f}" style="animation-delay:{delay}s">{"oO°"[k]}</text>')
-    parts.append("</g></g>")
+    parts.append("</g></g></g>")
 
     # The yard: two hens pecking in place, one wandering with her chick.
     def chicken_color(i, j, ch):
@@ -257,23 +274,23 @@ def main():
     parts += hen(118, 1.6)
     parts += sprite_svg([": . : ."], YARD_TOP + 4, 38, lambda i, j, ch: "#bb8009")
 
-    # Footer, in the same voice as the contributions card.
+    # Footer: farm facts only. Totals, streaks, and the best day live on the stats card.
     parts.append(f'<line x1="{X0}" y1="{footer_top}" x2="{width - X0}" y2="{footer_top}" stroke="{FRAME}"/>')
-    best = data["best_day"]
-    best_date = datetime.date.fromisoformat(best["date"]).strftime("%b %-d, %Y")
+    pretty = lambda iso: datetime.date.fromisoformat(iso).strftime("%b %-d, %Y")
     size, line1, line2 = 26, footer_top + 44, footer_top + 88
     parts.append(
-        f'<text x="{X0}" y="{line1}" font-size="{size}" fill="{MUTED}"><tspan fill="{CYAN}">$</tspan> harvest '
-        f'<tspan fill="{GOLD}" font-weight="700">{data["total_contributions"]:,}</tspan> commits from '
-        f'<tspan fill="{INK}" font-weight="700">{planted}</tspan> planted days</text>')
-    parts.append(f'<text x="{width - X0}" y="{line1}" font-size="{size - 2}" fill="{MUTED}" text-anchor="end">best yield '
-                 f'<tspan fill="{GOLD}" font-weight="700">{best["count"]}</tspan> on {esc(best_date)}</text>')
+        f'<text x="{X0}" y="{line1}" font-size="{size}" fill="{MUTED}"><tspan fill="{CYAN}">$</tspan> season '
+        f'<tspan fill="{INK}">{esc(pretty(data["range"]["start"]))}</tspan> &#8594; '
+        f'<tspan fill="{INK}">{esc(pretty(data["range"]["end"]))}</tspan>  &#183;  '
+        f'<tspan fill="{GOLD}" font-weight="700">{planted}</tspan> planted days</text>')
+    parts.append(f'<text x="{width - X0}" y="{line1}" font-size="{size - 2}" fill="{MUTED}" text-anchor="end">'
+                 f'flock <tspan fill="{INK}" font-weight="700">3</tspan> + 1 chick &#183; on bug patrol</text>')
     legend = "  ".join(f'<tspan fill="{color}" font-weight="700">{esc(lower)}</tspan>'
                        for _, lower, color in PLOTS)
     parts.append(f'<text x="{X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}" xml:space="preserve">'
                  f'<tspan fill="{CYAN}">$</tspan> fallow {legend} ripe</text>')
     parts.append(f'<text x="{width - X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}" text-anchor="end">'
-                 f'flock <tspan fill="{INK}" font-weight="700">3</tspan> + 1 chick &#183; on bug patrol</text>')
+                 f'one plot per day &#183; denser = more commits</text>')
     parts.append("</svg>")
     write(OUT, parts)
 
