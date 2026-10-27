@@ -51,22 +51,28 @@ def type_in(uid, x, baseline, size, chars, char_w, start, per_char=0.03, cursor=
     """
     width = chars * char_w
     dur = chars * per_char
+    done = start + dur
     top = baseline - size * 0.95
     height = size * 1.3
+    cursor_y = top + size * 0.12
+    # The cover is removed outright once typing ends rather than trusting its final
+    # stepped position, which some browsers leave one character short.
     css = (f"@keyframes w{uid}{{from{{transform:translateX(0)}}to{{transform:translateX({width:.1f}px)}}}}"
-           f".w{uid}{{animation:w{uid} {dur:.2f}s steps({chars}) {start:.2f}s both}}"
-           f"@keyframes c{uid}{{from,to{{opacity:.85}}}}"
-           f".c{uid}{{opacity:0;animation:c{uid} {dur + 0.15:.2f}s {start:.2f}s}}")
-    if keep_cursor:
-        css += (f"@keyframes b{uid}{{0%,49%{{opacity:.85}}50%,100%{{opacity:0}}}}"
-                f".c{uid}{{opacity:0;animation:b{uid} 1s step-end {start:.2f}s infinite}}")
+           f"@keyframes g{uid}{{to{{opacity:0}}}}"
+           f".w{uid}{{animation:w{uid} {dur:.2f}s steps({chars}) {start:.2f}s both,"
+           f"g{uid} .01s {done:.2f}s forwards}}")
     svg = (f'<clipPath id="k{uid}"><rect x="{x - 2:.1f}" y="{top:.1f}" width="{width + char_w * 1.5 + 4:.1f}" '
            f'height="{height:.1f}"/></clipPath>'
            f'<g class="tw" clip-path="url(#k{uid})"><g class="w{uid}">'
            f'<rect x="{x - 1:.1f}" y="{top:.1f}" width="{width + char_w * 1.5 + 4:.1f}" height="{height:.1f}" fill="url(#bg)"/>'
-           f'<rect class="c{uid}" x="{x:.1f}" y="{top + size * 0.12:.1f}" width="{char_w * 0.9:.1f}" '
-           f'height="{size * 1.05:.1f}" fill="{cursor}"/></g></g>')
-    return css, svg, start + dur
+           f'<rect x="{x:.1f}" y="{cursor_y:.1f}" width="{char_w * 0.9:.1f}" height="{size * 1.05:.1f}" '
+           f'fill="{cursor}" opacity=".85"/></g></g>')
+    if keep_cursor:
+        css += (f"@keyframes b{uid}{{0%,49%{{opacity:.85}}50%,100%{{opacity:0}}}}"
+                f".b{uid}{{opacity:0;animation:b{uid} 1s step-end {done:.2f}s infinite}}")
+        svg += (f'<rect class="b{uid}" x="{x + width + char_w * 0.25:.1f}" y="{cursor_y:.1f}" '
+                f'width="{char_w * 0.9:.1f}" height="{size * 1.05:.1f}" fill="{cursor}"/>')
+    return css, svg, done
 
 
 def window(width, height, title, scale=1.0, css=""):

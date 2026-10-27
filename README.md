@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- Portrait + stats are both 840x880 so equal display widths give equal heights.
-     Regenerate: python scripts/make_portrait.py (portrait), scripts/refresh.sh (everything else). -->
+     Regenerate: scripts/make_portrait.py and scripts/make_farm_scene.py (static art), scripts/refresh.sh (everything else). -->
 
 <h3><code>raghav@github ~ $ whoami</code></h3>
 
