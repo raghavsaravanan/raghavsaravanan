@@ -5,7 +5,7 @@
 
 <h3><code>raghav@github ~ $ ./farm.sh</code></h3>
 
-<img src="./assets/farm.svg" width="840" alt="Raghav's contributions as an ASCII farm: each day is a plot that grows by commit count, tilled by a tractor doing laps, with a flock of chickens on bug patrol. Refreshed daily." />
+<img src="./assets/farm.svg" width="840" alt="Raghav's contributions as an ASCII farm: a contribution graph where each day is a seed bed in GitHub greens, from bare soil to ripe wheat, tilled by a tractor doing laps, with a flock of chickens on bug patrol. Refreshed daily." />
 
 <br>
 <br>
@@ -15,7 +15,7 @@
 <table>
 <tr>
 <td valign="top"><img src="./assets/portrait.svg" width="400" alt="ASCII portrait of Raghav Saravanan" /></td>
-<td valign="top"><img src="./assets/stats.svg" width="400" alt="Raghav's GitHub stats: contributions, streaks, languages, and monthly activity, refreshed daily" /></td>
+<td valign="top"><img src="./assets/stats.svg" width="400" alt="Raghav's GitHub stats: this month, streaks, active days, repos, languages, and monthly activity, refreshed daily" /></td>
 </tr>
 </table>
 

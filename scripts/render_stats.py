@@ -88,13 +88,17 @@ def panel(x, y, w, h, label):
 def main():
     data = json.load(open(SRC))
     repos = data["repos"]
-    current, longest, best = data["current_streak"], data["longest_streak"], data["best_day"]
+    current, longest = data["current_streak"], data["longest_streak"]
     forks = repos["public_repos"] - repos["original_repos"]
 
+    # The farm already headlines the yearly total and best day, so the card leads with momentum instead.
+    this_month = data["monthly"][-1]
+    month_name = datetime.date.fromisoformat(this_month["month"] + "-01").strftime("%B")
+    active_share = data["active_days"] / len(data["days"])
     tiles = [
-        ("contributions", data["total_contributions"], "", "in the last year", GREEN),
+        ("this month", this_month["total"], "", f"contributions in {month_name}", GREEN),
         ("current streak", current["length"], " days", span(current), CYAN),
-        ("best day", best["count"], "", short(best["date"], year=True), GOLD),
+        ("active days", data["active_days"], "", f"{active_share:.0%} of the last year", GOLD),
         ("longest streak", longest["length"], " days", span(longest), INK),
         ("public repos", repos["public_repos"], "", f"{repos['original_repos']} original · {forks} forked", INK),
         ("avg / active day", data["avg_per_active_day"], "", "contributions", INK),

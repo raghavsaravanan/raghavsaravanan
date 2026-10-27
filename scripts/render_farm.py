@@ -39,9 +39,12 @@ ROWS = GRASS + 1
 FIELD_C0 = 23
 PLOT_W = 3
 
-GREENS = ["#2ea043", "#3fb950", "#56d364"]
-SOIL = "#7a6244"
 UNTILLED = "#2b4a33"
+# GitHub's own contribution greens, so the field reads like the graph every visitor
+# already knows. Days with no contributions are bare soil.
+BEDS = ["#3a2f23", "#0e4429", "#006d32", "#26a641", "#39d353"]
+CROPS = ["", ",", "v", "Y", "\u00a5"]   # a crop on each bed that grows with the level
+BED = 22
 RED = "#ff7b72"
 
 SCENE_COLORS = {
@@ -49,10 +52,6 @@ SCENE_COLORS = {
     "tree": "#2ea043", "barn": "#e5534b", "roof": "#f47067", "window": GOLD, "door": "#a0413b",
     "silo": "#adbac7",
 }
-
-# (top row, bottom row, color) per contribution level: crops bunch up as the day gets busier.
-PLOTS = [("   ", " . ", "#5a4a35"), (" , ", " : ", GREENS[0]), (" + ", ":+:", GREENS[1]),
-         ("+*+", "*#*", GREENS[2]), ("#@#", "@%@", GOLD)]
 
 CHICKEN = ["  \\\\", "  (o>", "\\\\_//)", " \\_/_)", "  _|_"]
 TRACTOR = [
@@ -211,25 +210,33 @@ def main():
     for d, name in [(1, "Mon"), (3, "Wed"), (5, "Fri")]:
         parts.append(line_svg(list(name), [MUTED] * 3, FIELD_C0 - 5, FIELD_TOP + d * 2 + 1))
 
-    # Field: grass until the tractor passes, then that week's crops.
+    # Field: grass until the tractor's first pass, then each day's seed bed in its
+    # contribution color with a crop that grows with the level. The best day gets a gold ring.
+    best = data["best_day"]
     planted = 0
     for ci, column in enumerate(grid):
         col = FIELD_C0 + ci * PLOT_W
         when = till_time(col + 1)
-        grass, crops = [], []
+        grass, beds = [], []
         for d, day in enumerate(column):
             if not day:
                 continue
-            top, bottom = FIELD_TOP + d * 2, FIELD_TOP + d * 2 + 1
-            for r in (top, bottom):
+            top = FIELD_TOP + d * 2
+            for r in (top, top + 1):
                 tex = "".join("'" if noise(r, col + k) < 0.28 else " " for k in range(PLOT_W))
                 grass.append((r, tex, UNTILLED))
             level = min(day["level"], 4)
             planted += bool(level)
-            upper, lower, color = PLOTS[level]
-            crops += [(top, upper, color), (bottom, lower, color)]
+            x = cx(col) + (PLOT_W * CW - BED) / 2
+            y = ART_TOP + top * CH + (2 * CH - BED) / 2
+            ring = f' stroke="{GOLD}" stroke-width="3"' if day["date"] == best["date"] else ""
+            beds.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{BED}" height="{BED}" rx="4" fill="{BEDS[level]}"{ring}>'
+                        f'<title>{day["count"]} contributions on {day["date"]}</title></rect>')
+            if level:
+                beds.append(f'<text x="{x + BED / 2:.1f}" y="{y + BED * 0.74:.1f}" fill="#e6ffec" opacity=".85" '
+                            f'font-size="17" font-weight="700" text-anchor="middle">{CROPS[level]}</text>')
         parts.append(column_layer(col, grass, "u", when))
-        parts.append(column_layer(col, crops, "g", when + 0.12))
+        parts.append(f'<g class="g" style="animation-delay:{when + 0.12:.2f}s">{"".join(beds)}</g>')
 
     # Tractor, driving along the meadow from beside the barn to the far end, puffing exhaust.
     def tractor_color(i, j, ch):
@@ -274,23 +281,30 @@ def main():
     parts += hen(118, 1.6)
     parts += sprite_svg([": . : ."], YARD_TOP + 4, 38, lambda i, j, ch: "#bb8009")
 
-    # Footer: farm facts only. Totals, streaks, and the best day live on the stats card.
+    # Footer: the headline numbers and a legend in the same colors as the beds.
     parts.append(f'<line x1="{X0}" y1="{footer_top}" x2="{width - X0}" y2="{footer_top}" stroke="{FRAME}"/>')
-    pretty = lambda iso: datetime.date.fromisoformat(iso).strftime("%b %-d, %Y")
+    best_date = datetime.date.fromisoformat(best["date"]).strftime("%b %-d, %Y")
     size, line1, line2 = 26, footer_top + 44, footer_top + 88
     parts.append(
-        f'<text x="{X0}" y="{line1}" font-size="{size}" fill="{MUTED}"><tspan fill="{CYAN}">$</tspan> season '
-        f'<tspan fill="{INK}">{esc(pretty(data["range"]["start"]))}</tspan> &#8594; '
-        f'<tspan fill="{INK}">{esc(pretty(data["range"]["end"]))}</tspan>  &#183;  '
-        f'<tspan fill="{GOLD}" font-weight="700">{planted}</tspan> planted days</text>')
+        f'<text x="{X0}" y="{line1}" font-size="{size}" fill="{MUTED}"><tspan fill="{CYAN}">$</tspan> '
+        f'<tspan fill="#39d353" font-weight="700">{data["total_contributions"]:,}</tspan> contributions in the last year'
+        f'  &#183;  <tspan fill="{INK}" font-weight="700">{planted}</tspan> days planted</text>')
     parts.append(f'<text x="{width - X0}" y="{line1}" font-size="{size - 2}" fill="{MUTED}" text-anchor="end">'
-                 f'flock <tspan fill="{INK}" font-weight="700">3</tspan> + 1 chick &#183; on bug patrol</text>')
-    legend = "  ".join(f'<tspan fill="{color}" font-weight="700">{esc(lower)}</tspan>'
-                       for _, lower, color in PLOTS)
-    parts.append(f'<text x="{X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}" xml:space="preserve">'
-                 f'<tspan fill="{CYAN}">$</tspan> fallow {legend} ripe</text>')
+                 f'<tspan fill="{GOLD}">&#9675;</tspan> best day <tspan fill="{GOLD}" font-weight="700">{best["count"]}</tspan>'
+                 f' on {esc(best_date)}</text>')
+    char = (size - 2) * 0.6
+    parts.append(f'<text x="{X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}">'
+                 f'<tspan fill="{CYAN}">$</tspan> less</text>')
+    lx = X0 + char * 7
+    for level, color in enumerate(BEDS):
+        parts.append(f'<rect x="{lx:.1f}" y="{line2 - 19}" width="{BED}" height="{BED}" rx="4" fill="{color}"/>')
+        if level:
+            parts.append(f'<text x="{lx + BED / 2:.1f}" y="{line2 - 19 + BED * 0.74:.1f}" fill="#e6ffec" opacity=".85" '
+                         f'font-size="17" font-weight="700" text-anchor="middle">{CROPS[level]}</text>')
+        lx += BED + 8
+    parts.append(f'<text x="{lx + 6:.1f}" y="{line2}" font-size="{size - 2}" fill="{MUTED}">more  &#183;  one bed per day</text>')
     parts.append(f'<text x="{width - X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}" text-anchor="end">'
-                 f'one plot per day &#183; denser = more commits</text>')
+                 f'flock <tspan fill="{INK}" font-weight="700">3</tspan> + 1 chick &#183; on bug patrol</text>')
     parts.append("</svg>")
     write(OUT, parts)
 
