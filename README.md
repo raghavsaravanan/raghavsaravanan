@@ -40,6 +40,13 @@
 
 <br>
 
+<h3><code>raghav@github ~ $ ./farm.sh</code></h3>
+
+<img src="./assets/farm.svg" width="840" alt="Raghav's contributions as an ASCII farm: each day is a plot that grows by commit count, tilled by a tractor, with a flock of chickens on bug patrol. Refreshed daily." />
+
+<br>
+<br>
+
 <h3><code>raghav@github ~ $ ./links.sh</code></h3>
 
 <a href="https://bondingai.io"><img src="./assets/links/bondingai.svg" width="420" alt="bondingAI: bondingai.io" /></a><br>
