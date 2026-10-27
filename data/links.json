@@ -2,33 +2,29 @@
   {
     "id": "bondingai",
     "label": "bondingAI",
-    "display": "bondingai.io",
-    "url": "https://bondingai.io",
-    "icon": "bondingai",
-    "color": "#0d1117"
+    "command": "open",
+    "target": "bondingai.io",
+    "url": "https://bondingai.io"
   },
   {
     "id": "linkedin",
     "label": "LinkedIn",
-    "display": "in/raghavsaravanan",
-    "url": "https://www.linkedin.com/in/raghavsaravanan/",
-    "icon": "linkedin",
-    "color": "#0a66c2"
+    "command": "open",
+    "target": "linkedin.com/in/raghavsaravanan",
+    "url": "https://www.linkedin.com/in/raghavsaravanan/"
   },
   {
     "id": "devpost",
     "label": "Devpost",
-    "display": "devpost.com/raghavsaravanan",
-    "url": "https://devpost.com/raghavsaravanan",
-    "icon": "devpost",
-    "color": "#003e54"
+    "command": "open",
+    "target": "devpost.com/raghavsaravanan",
+    "url": "https://devpost.com/raghavsaravanan"
   },
   {
     "id": "email",
     "label": "Email",
-    "display": "raghav.saravanan18@gmail.com",
-    "url": "mailto:raghav.saravanan18@gmail.com",
-    "icon": "email",
-    "color": "#1f6feb"
+    "command": "mail",
+    "target": "raghav.saravanan18@gmail.com",
+    "url": "mailto:raghav.saravanan18@gmail.com"
   }
 ]

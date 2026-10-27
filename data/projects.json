@@ -1,19 +1,29 @@
 [
   {
-    "name": "GitVenture",
-    "repo": "GitVenture",
-    "badge": "HackRice 2026",
-    "highlight": true,
-    "description": "Turns GitHub issues into RPG quests. A Chrome extension puts AI-rated XP on every issue, and XP only unlocks when a maintainer merges your PR.",
-    "tags": ["TypeScript", "React", "Gemini", "Postgres"]
-  },
-  {
     "name": "Lumi",
     "repo": "Lumi",
     "badge": "HackTX 2026",
     "highlight": true,
     "description": "Turns a phone camera into spoken, step-by-step guidance for blind and low-vision users, confirming every step on camera before moving on.",
-    "tags": ["TypeScript", "Python", "Muse Spark", "three.js"]
+    "tags": [
+      "TypeScript",
+      "Python",
+      "Muse Spark",
+      "three.js"
+    ]
+  },
+  {
+    "name": "GitVenture",
+    "repo": "GitVenture",
+    "badge": "HackRice 2026",
+    "highlight": true,
+    "description": "Turns GitHub issues into RPG quests. A Chrome extension puts AI-rated XP on every issue, and XP only unlocks when a maintainer merges your PR.",
+    "tags": [
+      "TypeScript",
+      "React",
+      "Gemini",
+      "Postgres"
+    ]
   },
   {
     "name": "Issue-to-PR Agent",
@@ -21,27 +31,46 @@
     "slug": "issue-to-pr",
     "badge": "AI agent",
     "description": "Label a GitHub issue, get a review-ready pull request back. The agent only opens a PR after the real test suite passes.",
-    "tags": ["Python", "Gemini", "GitHub Actions"]
+    "tags": [
+      "Python",
+      "Gemini",
+      "GitHub Actions"
+    ]
   },
   {
     "name": "George",
     "repo": "George",
     "badge": "Voice AI",
     "description": "Hands-free voice agent for auto mechanics. Ask for torque and install specs out loud and get a short answer grounded in shop manuals.",
-    "tags": ["Python", "Vapi", "Qdrant", "RAG"]
+    "tags": [
+      "Python",
+      "Vapi",
+      "Qdrant",
+      "RAG"
+    ]
   },
   {
     "name": "Groovely",
     "repo": "Groovely",
     "badge": "Full-stack",
     "description": "Dance app with AI pose analysis of your routines, video challenges, and social competition.",
-    "tags": ["React", "FastAPI", "MediaPipe", "Supabase"]
+    "tags": [
+      "React",
+      "FastAPI",
+      "MediaPipe",
+      "Supabase"
+    ]
   },
   {
     "name": "Bondedd",
     "repo": "Bondedd",
     "badge": "Full-stack",
     "description": "Campus event discovery for university students, pulling events scattered across Instagram, flyers, and group chats into one place.",
-    "tags": ["React", "TypeScript", "Supabase", "Mapbox"]
+    "tags": [
+      "React",
+      "TypeScript",
+      "Supabase",
+      "Mapbox"
+    ]
   }
 ]
