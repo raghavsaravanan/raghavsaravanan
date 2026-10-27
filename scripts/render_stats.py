@@ -44,6 +44,8 @@ CSS = (
     ".b{transform-box:fill-box;transform-origin:bottom;transform:scaleY(0);animation:grow .6s ease-out both}"
     "@keyframes wipe{from{transform:scaleX(0)}to{transform:scaleX(1)}}"
     ".w{transform-box:fill-box;transform-origin:left;transform:scaleX(0);animation:wipe .5s ease-out both}"
+    "@keyframes show{from,to{opacity:1}}"
+    ".cf,.cl{opacity:0}"
 )
 
 
@@ -56,18 +58,24 @@ def span(streak):
 
 
 def count_up(x, y, value, suffix, color, start):
-    """Pre-rendered frames toggled with SMIL <set>, easing out into the real number."""
+    """
+    Pre-rendered frames easing out into the real number. Each in-between frame is
+    visible only while its CSS animation runs; the final frame stays on.
+    """
     is_float = isinstance(value, float)
+    frame = COUNT / FRAMES
     out = []
     for k in range(1, FRAMES + 1):
         shown = value * (1 - (1 - k / FRAMES) ** 3)
         text = f"{shown:,.1f}" if is_float else f"{round(shown):,}"
-        on = start + COUNT * (k - 1) / FRAMES
-        anim = f'<set attributeName="opacity" to="1" begin="{on:.3f}s"/>'
+        on = start + frame * (k - 1)
         if k < FRAMES:
-            anim += f'<set attributeName="opacity" to="0" begin="{start + COUNT * k / FRAMES:.3f}s"/>'
-        out.append(f'<text x="{x}" y="{y}" opacity="0" font-size="50" font-weight="700" fill="{color}">'
-                   f'{text}<tspan font-size="22" font-weight="400" fill="{MUTED}">{esc(suffix)}</tspan>{anim}</text>')
+            cls, style = "cf", f"animation:show {frame:.3f}s {on:.3f}s"
+        else:
+            cls, style = "cl", f"animation:show 1s {on:.3f}s forwards"
+        out.append(f'<text class="{cls}" x="{x}" y="{y}" font-size="50" font-weight="700" fill="{color}" '
+                   f'style="{style}">{text}<tspan font-size="22" font-weight="400" fill="{MUTED}">'
+                   f'{esc(suffix)}</tspan></text>')
     return out
 
 

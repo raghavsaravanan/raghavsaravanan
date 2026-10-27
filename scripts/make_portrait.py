@@ -87,7 +87,10 @@ def main():
     css = ("@keyframes print{from{opacity:0}to{opacity:1}}"
            ".r{opacity:0;animation:print .25s ease-out both}"
            "@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}"
-           ".k{animation:blink 1s step-end infinite}")
+           ".k{animation:blink 1s step-end infinite}"
+           "@keyframes scan{0%{opacity:.9;transform:translateY(0)}95%{opacity:.9}"
+           f"100%{{opacity:0;transform:translateY({ART_H}px)}}}}"
+           f".s{{opacity:0;animation:scan {SWEEP}s linear both}}")
     parts = window(W, H, "~$ ./portrait.sh", scale=SCALE, css=css)
 
     font = CELL_H * 0.9
@@ -101,18 +104,14 @@ def main():
             f'style="animation-delay:{SWEEP * i / ROWS:.3f}s">{esc(line)}</text>'
         )
 
-    parts.append(
-        f'<rect x="0" y="{ART_TOP}" width="{W}" height="3" fill="{CYAN}" opacity="0">'
-        f'<animate attributeName="y" from="{ART_TOP}" to="{ART_TOP + ART_H}" dur="{SWEEP}s" fill="freeze"/>'
-        f'<animate attributeName="opacity" values="0.9;0.9;0" keyTimes="0;0.95;1" dur="{SWEEP}s" fill="freeze"/>'
-        f"</rect>"
-    )
+    parts.append(f'<rect class="s tw" x="0" y="{ART_TOP}" width="{W}" height="3" fill="{CYAN}"/>')
 
     bar_y = H - STATUS_H
     text_y = bar_y + 40
     parts.append(f'<line x1="0" y1="{bar_y}" x2="{W}" y2="{bar_y}" stroke="{FRAME}"/>')
     status = f"$ whoami  {NAME}  ·  {ROLE}"
-    parts.append(f'<text x="{PAD + 4}" y="{text_y}" font-size="20" fill="{MUTED}" xml:space="preserve">'
+    parts.append(f'<text x="{PAD + 4}" y="{text_y}" font-size="20" fill="{MUTED}" xml:space="preserve" '
+                 f'textLength="{len(status) * 12:.1f}" lengthAdjust="spacingAndGlyphs">'
                  f'<tspan fill="{CYAN}">$</tspan> whoami  <tspan fill="{INK}" font-weight="700">{esc(NAME)}</tspan>'
                  f'  ·  {esc(ROLE)}</text>')
     cursor_x = PAD + 4 + len(status) * 20 * 0.6 + 8

@@ -12,7 +12,7 @@ import json
 import os
 import textwrap
 
-from theme import CYAN, FRAME, GOLD, INK, MUTED, PANEL, SOFT_INK, TITLEBAR_H, esc, window, write
+from theme import CYAN, FRAME, GOLD, INK, MUTED, PANEL, SOFT_INK, TITLEBAR_H, esc, type_in, window, write
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SRC = os.path.join(ROOT, "data", "projects.json")
@@ -32,35 +32,24 @@ TYPE_TIME = 0.6
 CSS = (
     "@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"
     ".f{opacity:0;animation:rise .5s ease-out both}"
-    "@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}"
-    ".k{animation:blink 1s step-end infinite}"
 )
 
 
 def card(project):
     slug = project.get("slug", project["repo"].lower())
-    parts = window(W, H, f"~/projects/{slug}", scale=SCALE, css=CSS)
-
     prompt_y = TITLEBAR_H * SCALE + 46
-    parts.append(f'<text x="{PAD}" y="{prompt_y}" fill="{MUTED}" font-size="20">'
-                 f'<tspan fill="{CYAN}">$</tspan> cat README.md | head -1</text>')
-
     name_y = prompt_y + 66
     chars = len(project["name"])
-    name_w = chars * NAME_SIZE * CHAR
-    # Discrete steps reveal one whole character at a time, like typing.
-    steps = ";".join(str(round(name_w * i / chars) + (4 if i == chars else 0)) for i in range(chars + 1))
-    parts.append(
-        f'<clipPath id="n"><rect x="{PAD}" y="{name_y - NAME_SIZE}" width="0" height="{NAME_SIZE + 14}">'
-        f'<animate attributeName="width" values="{steps}" calcMode="discrete" begin="0.2s" '
-        f'dur="{TYPE_TIME}s" fill="freeze"/></rect></clipPath>'
-    )
-    parts.append(f'<text clip-path="url(#n)" x="{PAD}" y="{name_y}" fill="{INK}" font-size="{NAME_SIZE}" '
-                 f'font-weight="700">{esc(project["name"])}</text>')
-    parts.append(
-        f'<rect class="k" x="{PAD + name_w + 8:.0f}" y="{name_y - NAME_SIZE + 8}" width="{NAME_SIZE * 0.5:.0f}" '
-        f'height="{NAME_SIZE}" fill="{CYAN}" opacity="0.8"/>'
-    )
+    char_w = NAME_SIZE * CHAR
+    type_css, cover, _ = type_in("n", PAD, name_y, NAME_SIZE, chars, char_w, 0.2,
+                                 per_char=TYPE_TIME / chars, cursor=CYAN, keep_cursor=True)
+    parts = window(W, H, f"~/projects/{slug}", scale=SCALE, css=CSS + type_css)
+
+    parts.append(f'<text x="{PAD}" y="{prompt_y}" fill="{MUTED}" font-size="20">'
+                 f'<tspan fill="{CYAN}">$</tspan> cat README.md | head -1</text>')
+    parts.append(f'<text x="{PAD}" y="{name_y}" fill="{INK}" font-size="{NAME_SIZE}" font-weight="700" '
+                 f'textLength="{chars * char_w:.1f}" lengthAdjust="spacingAndGlyphs">{esc(project["name"])}</text>')
+    parts.append(cover)
 
     badge = project["badge"]
     color = GOLD if project.get("highlight") else CYAN
