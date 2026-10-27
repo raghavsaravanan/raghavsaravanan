@@ -132,8 +132,10 @@ def main():
         cursor += seg
         label = f"{lang['name']} {lang['share']:.0%}"
         parts.append(f'<circle cx="{legend_x + 6}" cy="{LANG_TOP + 103}" r="6" fill="{color}"/>')
-        parts.append(f'<text x="{legend_x + 18}" y="{LANG_TOP + 109}" fill="{INK}" font-size="16">{esc(label)}</text>')
-        legend_x += 18 + len(label) * 9.7 + 22
+        label_w = len(label) * 16 * 0.6
+        parts.append(f'<text x="{legend_x + 18}" y="{LANG_TOP + 109}" fill="{INK}" font-size="16" '
+                     f'textLength="{label_w:.1f}" lengthAdjust="spacingAndGlyphs">{esc(label)}</text>')
+        legend_x += 18 + label_w + 22
     parts.append("</g>")
 
     chart_start = lang_start + 0.5

@@ -24,8 +24,8 @@ CW, CH = 8, 15                # pixels per character, matching render_farm.py
 RAMP = " .:;+*o#%@"           # brighter prints denser; no - or =, which streak across slopes
 
 # Region labels, mapped to colors in render_farm.py.
-SKY, SUN, FAR, SNOW, HILL, MEADOW, TREE, BARN, ROOF, WINDOW, DOOR, SILO = range(12)
-NAMES = ["sky", "sun", "far", "snow", "hill", "meadow", "tree", "barn", "roof", "window", "door", "silo"]
+SKY, SUN, FAR, SNOW, HILL, MEADOW, TREE, BARN, ROOF, WINDOW, DOOR, SILO, TRIM = range(13)
+NAMES = ["sky", "sun", "far", "snow", "hill", "meadow", "tree", "barn", "roof", "window", "door", "silo", "trim"]
 
 
 def noise1d(n, step, seed):
@@ -132,26 +132,38 @@ def landscape():
         tri = (t >= 0) & (t <= 1) & (np.abs(xx - cx) <= hgt * 0.3 * (1 - t) + 2)
         paint(tri, np.where(xx > cx, 0.55, 0.28).astype(np.float32), TREE)
 
-    # Barn: shaded walls, gambrel roof, dark doors with a bright cross brace, glowing loft window.
-    left, right, eave, ridge_y = 30, 200, base - 92, base - 150
+    # Barn: red walls and gambrel roof with classic white trim. Trim lines are a full
+    # character cell thick and sit on cell boundaries so they survive the downsample.
+    left, right, eave, ridge_y = 24, 200, base - 89, base - 150
     mid = (left + right) // 2
-    walls = (xx >= left) & (xx <= right) & (yy >= eave) & (yy <= base)
+    walls = (xx >= left) & (xx < right) & (yy >= eave) & (yy <= base)
     paint(walls, np.where(xx > mid, 0.62, 0.42).astype(np.float32), BARN)
+    roof_poly = np.array([[left - 8, eave], [left + 16, eave - 38], [mid, ridge_y],
+                          [right - 16, eave - 38], [right + 8, eave]], np.int32)
     roof = np.zeros((h, w), np.uint8)
-    cv2.fillPoly(roof, [np.array([[left - 10, eave + 2], [left + 14, eave - 38], [mid, ridge_y],
-                                   [right - 14, eave - 38], [right + 10, eave + 2]], np.int32)], 1)
-    paint(roof.astype(bool), np.where(xx > mid, 0.82, 0.6).astype(np.float32), ROOF)
-    door = (xx >= mid - 30) & (xx <= mid + 30) & (yy >= base - 58) & (yy <= base)
+    cv2.fillPoly(roof, [roof_poly], 1)
+    paint(roof.astype(bool), np.where(xx > mid, 0.8, 0.58).astype(np.float32), ROOF)
+    trim = np.zeros((h, w), np.uint8)
+    cv2.polylines(trim, [roof_poly], False, 1, 9)                         # roofline
+    cv2.line(trim, (left, eave), (right, eave), 1, 9)                    # eave
+    trim[eave:base + 1, left:left + CW] = 1                               # corner boards
+    trim[eave:base + 1, right - CW:right] = 1
+    door_l, door_r, door_t = mid - 36, mid + 36, base - 60
+    trim[door_t:base + 1, door_l:door_l + CW] = 1                        # door frame
+    trim[door_t:base + 1, door_r - CW:door_r] = 1
+    trim[door_t:door_t + CH, door_l:door_r] = 1
+    door = (xx >= door_l + CW) & (xx < door_r - CW) & (yy >= door_t + CH) & (yy <= base)
     paint(door, np.float32(0.12), DOOR)
     brace = np.zeros((h, w), np.uint8)
-    for (x1, y1, x2, y2) in [(mid - 30, base - 58, mid + 30, base), (mid + 30, base - 58, mid - 30, base)]:
-        cv2.line(brace, (x1, y1), (x2, y2), 1, 4)
-    paint(brace.astype(bool) & door, np.float32(0.85), BARN)
-    loft = (xx >= mid - 14) & (xx <= mid + 14) & (yy >= eave - 30) & (yy <= eave - 8)
+    cv2.line(brace, (door_l + CW, door_t + CH), (door_r - CW, base), 1, 9)
+    cv2.line(brace, (door_r - CW, door_t + CH), (door_l + CW, base), 1, 9)
+    trim |= brace & door.astype(np.uint8)
+    paint(trim.astype(bool), np.float32(0.9), TRIM)
+    loft = (xx >= mid - 16) & (xx < mid + 16) & (yy >= eave - 30) & (yy <= eave - 8)
     paint(loft, np.float32(0.97), WINDOW)
 
     # Silo: a cylinder shaded across its width, with hoops and a dome.
-    scx, sr, stop = 232, 22, base - 190
+    scx, sr, stop = 236, 22, base - 190
     cyl = 0.22 + 0.6 * np.clip(np.cos((xx - scx - 8) / sr * np.pi / 2), 0, 1)
     body = (np.abs(xx - scx) <= sr) & (yy >= stop) & (yy <= base)
     hoops = (yy - stop) % 30 < 3

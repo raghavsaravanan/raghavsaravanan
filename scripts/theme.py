@@ -91,9 +91,14 @@ def window(width, height, title, scale=1.0, css=""):
     ]
     for i, color in enumerate(["#ff5f56", "#ffbd2e", "#27c93f"]):
         parts.append(f'<circle cx="{(20 + i * 18) * scale}" cy="{bar / 2}" r="{dot_r}" fill="{color}"/>')
+    label = f"{PROMPT_USER}@github: {title}"
+    size = 13 * scale
+    label_w = len(label) * size * 0.6
+    # Centered, unless a long title would crowd the traffic-light dots.
+    center = max(width / 2, (20 + 2 * 18 + 5.5) * scale + 16 * scale + label_w / 2)
     parts.append(
-        f'<text x="{width / 2}" y="{bar / 2 + 4.5 * scale}" fill="{MUTED}" font-size="{13 * scale:.0f}" '
-        f'text-anchor="middle">{esc(PROMPT_USER)}@github: {esc(title)}</text>'
+        f'<text x="{center:.1f}" y="{bar / 2 + 4.5 * scale}" fill="{MUTED}" font-size="{size:.0f}" '
+        f'text-anchor="middle" textLength="{label_w:.1f}" lengthAdjust="spacingAndGlyphs">{esc(label)}</text>'
     )
     return parts
 

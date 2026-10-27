@@ -5,8 +5,8 @@ Render the last year of contributions as an ASCII farm in the portrait's style.
 The landscape (mountains, sun, pines, barn, silo) comes from
 data/farm_scene.json, painted and converted to ASCII by make_farm_scene.py.
 The scenery prints in under a scanline, then the tractor starts doing laps of the
-field. On its first pass each week's column turns from grass to crops, and every
-day's crop grows denser with that day's contribution level. After that it keeps
+field. On its quick first pass each week's column turns from grass to seed beds in
+GitHub's contribution greens, each with a crop that grows with the day's level. After that it keeps
 circling, wheels spinning, while the chickens peck in the yard.
 
 Drawn at 2x and shown at half size in the README.
@@ -32,25 +32,27 @@ ART_TOP = TITLEBAR_H * SCALE + 18
 
 SCENE_ROWS = 30
 MONTHS = SCENE_ROWS + 1
-FIELD_TOP = MONTHS + 1               # 7 days x 2 rows per plot
+FIELD_TOP = MONTHS + 2               # 14 text rows = 7 day rows of PITCH_Y; a row of air above
 YARD_TOP = FIELD_TOP + 14 + 1
 GRASS = YARD_TOP + 5
 ROWS = GRASS + 1
-FIELD_C0 = 23
-PLOT_W = 3
+# The field is laid out in pixels, not on the text grid, so the beds come out square
+# like GitHub's: the horizontal pitch fits however many weeks the year spans.
+PITCH_Y = 2 * CH
+DAY_LABEL_W = 44
+GAP = 4
 
 UNTILLED = "#2b4a33"
 # GitHub's own contribution greens, so the field reads like the graph every visitor
 # already knows. Days with no contributions are bare soil.
 BEDS = ["#3a2f23", "#0e4429", "#006d32", "#26a641", "#39d353"]
 CROPS = ["", ",", "v", "Y", "\u00a5"]   # a crop on each bed that grows with the level
-BED = 22
 RED = "#ff7b72"
 
 SCENE_COLORS = {
     "sun": GOLD, "far": "#8b949e", "snow": INK, "hill": "#6e7681", "meadow": "#3d5a45",
     "tree": "#2ea043", "barn": "#e5534b", "roof": "#f47067", "window": GOLD, "door": "#a0413b",
-    "silo": "#adbac7",
+    "silo": "#adbac7", "trim": INK,
 }
 
 CHICKEN = ["  \\\\", "  (o>", "\\\\_//)", " \\_/_)", "  _|_"]
@@ -64,10 +66,12 @@ TRACTOR = [
     " \\_____/       \\___/",
 ]
 CHICK = ["(.>", " ^ "]
+HAY = ["    ____", "   (____)", " ____(____)", "(____)(____)"]
 
 PRINT_TIME = 1.2
 DRIVE_START = PRINT_TIME + 0.1
-LAP = 9.0                            # seconds per lap; the first lap tills the field
+FIRST_LAP = 5.0                      # a brisk first pass tills the field, so the graph appears quickly
+LAP = 9.0                            # then it cruises
 TRACTOR_PARK_C = 150                 # where it sits if the viewer prefers reduced motion
 
 CSS = (
@@ -158,16 +162,6 @@ def weeks(days):
     return grid
 
 
-def column_layer(col, cells, cls, delay):
-    """One <text> per field column, with a positioned <tspan> for each non-empty row."""
-    spans = "".join(f'<tspan x="{cx(col):.1f}" y="{cy(r):.1f}" fill="{color}" textLength="{PLOT_W * CW}" '
-                    f'lengthAdjust="spacingAndGlyphs">{esc(s)}</tspan>' for r, s, color in cells if s.strip())
-    if not spans:
-        return ""
-    return (f'<text class="{cls}" font-size="{FONT_SIZE:.1f}" xml:space="preserve" '
-            f'style="animation-delay:{delay:.2f}s">{spans}</text>')
-
-
 def main():
     data = json.load(open(SRC))
     scene = json.load(open(SCENE))
@@ -175,21 +169,33 @@ def main():
     cols = scene["cols"]
     width = X0 * 2 + cols * CW
 
+    # Field geometry: square beds on a pixel pitch that fits the year's week count.
+    art_w = cols * CW
+    pitch_x = min(PITCH_Y, int((art_w - DAY_LABEL_W) / len(grid)))
+    bed = pitch_x - GAP
+    field_w = len(grid) * pitch_x - GAP
+    field_x0 = cx(0) + (art_w - DAY_LABEL_W - field_w) / 2 + DAY_LABEL_W
+    field_y0 = ART_TOP + FIELD_TOP * CH
+
     # The tractor laps from just off the left edge of the scene to just off the right.
+    # It's drawn at its parked spot and animated relative to it, so with reduced motion
+    # (which strips transforms) it simply stays parked.
     tractor_w = len(TRACTOR[0]) * CW
     park_x = cx(TRACTOR_PARK_C)
     enter_x, exit_x = cx(0) - tractor_w, cx(cols)
 
-    def till_time(col):
-        """When the middle of the tractor first passes this column."""
-        progress = (cx(col) - enter_x - tractor_w / 2) / (exit_x - enter_x)
-        return DRIVE_START + LAP * progress
+    def till_time(x):
+        """When the middle of the tractor first passes x, on the quick first lap."""
+        progress = (x - enter_x - tractor_w / 2) / (exit_x - enter_x)
+        return DRIVE_START + FIRST_LAP * progress
 
     footer_top = ART_TOP + ROWS * CH + 18
     height = footer_top + 108
-    css = CSS + (f"@keyframes drive{{from{{transform:translateX({enter_x - park_x:.1f}px)}}"
-                 f"to{{transform:translateX({exit_x - park_x:.1f}px)}}}}"
-                 f".tr{{animation:drive {LAP}s linear {DRIVE_START}s infinite both}}")
+    drive = (f"from{{transform:translateX({enter_x - park_x:.1f}px)}}"
+             f"to{{transform:translateX({exit_x - park_x:.1f}px)}}")
+    css = CSS + (f"@keyframes drive{{{drive}}}"
+                 f".tr{{animation:drive {FIRST_LAP}s linear {DRIVE_START}s 1 both,"
+                 f"drive {LAP}s linear {DRIVE_START + FIRST_LAP}s infinite}}")
     parts = window(width, height, f"~$ ./farm.sh --season {data['range']['end'][:4]}", scale=SCALE, css=css)
 
     # Scenery prints top to bottom under a scanline, like the portrait.
@@ -200,42 +206,41 @@ def main():
 
     labels = [(ci, datetime.date.fromisoformat(col[0]["date"]).strftime("%b"))
               for ci, col in enumerate(grid) if col[0] and int(col[0]["date"][8:]) <= 7 and ci < len(grid) - 2]
-    month_row = [" "] * cols
     for i, (ci, label) in enumerate(labels):
         if i + 1 < len(labels) and labels[i + 1][0] - ci < 3:
             continue
-        for k, ch in enumerate(label):
-            month_row[FIELD_C0 + ci * PLOT_W + k] = ch
-    parts.append(line_svg(month_row, [MUTED] * cols, 0, MONTHS))
+        parts.append(f'<text x="{field_x0 + ci * pitch_x:.1f}" y="{field_y0 - 12:.1f}" fill="{MUTED}" '
+                     f'font-size="22">{label}</text>')
     for d, name in [(1, "Mon"), (3, "Wed"), (5, "Fri")]:
-        parts.append(line_svg(list(name), [MUTED] * 3, FIELD_C0 - 5, FIELD_TOP + d * 2 + 1))
+        parts.append(f'<text x="{field_x0 - 10:.1f}" y="{field_y0 + d * PITCH_Y + PITCH_Y / 2 + 7:.1f}" '
+                     f'fill="{MUTED}" font-size="20" text-anchor="end">{name}</text>')
 
-    # Field: grass until the tractor's first pass, then each day's seed bed in its
+    # Field: untilled grass until the tractor's first pass, then each day's seed bed in its
     # contribution color with a crop that grows with the level. The best day gets a gold ring.
     best = data["best_day"]
     planted = 0
+    crop_size = round(bed * 0.72)
     for ci, column in enumerate(grid):
-        col = FIELD_C0 + ci * PLOT_W
-        when = till_time(col + 1)
+        x = field_x0 + ci * pitch_x
+        when = till_time(x + bed / 2)
         grass, beds = [], []
         for d, day in enumerate(column):
             if not day:
                 continue
-            top = FIELD_TOP + d * 2
-            for r in (top, top + 1):
-                tex = "".join("'" if noise(r, col + k) < 0.28 else " " for k in range(PLOT_W))
-                grass.append((r, tex, UNTILLED))
+            y = field_y0 + d * PITCH_Y + (PITCH_Y - bed) / 2
+            tuft = "'" if noise(d, ci) < 0.5 else '"'
+            grass.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bed}" height="{bed}" rx="4" fill="{UNTILLED}" '
+                         f'opacity=".45"/><text x="{x + bed / 2:.1f}" y="{y + bed * 0.8:.1f}" fill="#3d6b47" '
+                         f'font-size="{crop_size}" text-anchor="middle">{tuft}</text>')
             level = min(day["level"], 4)
             planted += bool(level)
-            x = cx(col) + (PLOT_W * CW - BED) / 2
-            y = ART_TOP + top * CH + (2 * CH - BED) / 2
             ring = f' stroke="{GOLD}" stroke-width="3"' if day["date"] == best["date"] else ""
-            beds.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{BED}" height="{BED}" rx="4" fill="{BEDS[level]}"{ring}>'
+            beds.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bed}" height="{bed}" rx="4" fill="{BEDS[level]}"{ring}>'
                         f'<title>{day["count"]} contributions on {day["date"]}</title></rect>')
             if level:
-                beds.append(f'<text x="{x + BED / 2:.1f}" y="{y + BED * 0.74:.1f}" fill="#e6ffec" opacity=".85" '
-                            f'font-size="17" font-weight="700" text-anchor="middle">{CROPS[level]}</text>')
-        parts.append(column_layer(col, grass, "u", when))
+                beds.append(f'<text x="{x + bed / 2:.1f}" y="{y + bed * 0.74:.1f}" fill="#e6ffec" opacity=".85" '
+                            f'font-size="{crop_size}" font-weight="700" text-anchor="middle">{CROPS[level]}</text>')
+        parts.append(f'<g class="u tw" style="animation-delay:{when:.2f}s">{"".join(grass)}</g>')
         parts.append(f'<g class="g" style="animation-delay:{when + 0.12:.2f}s">{"".join(beds)}</g>')
 
     # Tractor, driving along the meadow from beside the barn to the far end, puffing exhaust.
@@ -247,20 +252,21 @@ def main():
     tractor_row = SCENE_ROWS - len(TRACTOR)
     hubs = TRACTOR.index(next(line for line in TRACTOR if "(o)" in line))
     spun = TRACTOR[hubs].replace("(o)", "(+)")
+    hub_color = lambda i, j, ch: tractor_color(hubs, j, ch)
     parts.append(f'<clipPath id="lane"><rect x="{cx(0)}" y="{ART_TOP}" width="{cols * CW}" '
                  f'height="{SCENE_ROWS * CH}"/></clipPath>')
-    parts.append(f'<g clip-path="url(#lane)"><g transform="translate({park_x - cx(0):.1f} 0)"><g class="tr">')
+    parts.append('<g clip-path="url(#lane)"><g class="tr">')
     frame = [line if i != hubs else " " * len(line) for i, line in enumerate(TRACTOR)]
-    parts += sprite_svg(frame, tractor_row, 0, tractor_color, backing=True)
+    parts += sprite_svg(frame, tractor_row, TRACTOR_PARK_C, tractor_color, backing=True)
     # Hubs alternate between (o) and (+) so the wheels look like they're turning.
-    parts += sprite_svg([TRACTOR[hubs]], tractor_row + hubs, 0, lambda i, j, ch: tractor_color(hubs, j, ch),
-                        cls="ha", backing=True)
-    parts += sprite_svg([spun], tractor_row + hubs, 0, lambda i, j, ch: tractor_color(hubs, j, ch),
-                        cls="hb cf", backing=True)
+    parts += sprite_svg([TRACTOR[hubs]], tractor_row + hubs, TRACTOR_PARK_C, hub_color, cls="ha", backing=True)
+    parts += sprite_svg([spun], tractor_row + hubs, TRACTOR_PARK_C, hub_color, cls="hb cf", backing=True)
+    exhaust = TRACTOR[0].index("|")
     for k, delay in enumerate([0, 0.7, 1.4]):
-        parts.append(f'<text class="pf" x="{cx(16):.1f}" y="{cy(tractor_row - 1):.1f}" fill="#8b949e" '
-                     f'font-size="{FONT_SIZE + k * 2:.1f}" style="animation-delay:{delay}s">{"oO°"[k]}</text>')
-    parts.append("</g></g></g>")
+        parts.append(f'<text class="pf tw" x="{cx(TRACTOR_PARK_C + exhaust):.1f}" y="{cy(tractor_row - 1):.1f}" '
+                     f'fill="#8b949e" font-size="{FONT_SIZE + k * 2:.1f}" style="animation-delay:{delay}s">'
+                     f'{"oO°"[k]}</text>')
+    parts.append("</g></g>")
 
     # The yard: two hens pecking in place, one wandering with her chick.
     def chicken_color(i, j, ch):
@@ -280,6 +286,7 @@ def main():
     parts.append("</g>")
     parts += hen(118, 1.6)
     parts += sprite_svg([": . : ."], YARD_TOP + 4, 38, lambda i, j, ch: "#bb8009")
+    parts += sprite_svg(HAY, YARD_TOP + 1, 160, lambda i, j, ch: "#d29922")
 
     # Footer: the headline numbers and a legend in the same colors as the beds.
     parts.append(f'<line x1="{X0}" y1="{footer_top}" x2="{width - X0}" y2="{footer_top}" stroke="{FRAME}"/>')
@@ -293,15 +300,16 @@ def main():
                  f'<tspan fill="{GOLD}">&#9675;</tspan> best day <tspan fill="{GOLD}" font-weight="700">{best["count"]}</tspan>'
                  f' on {esc(best_date)}</text>')
     char = (size - 2) * 0.6
-    parts.append(f'<text x="{X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}">'
-                 f'<tspan fill="{CYAN}">$</tspan> less</text>')
+    # textLength pins the label's width so the legend swatches land right after it in any font.
+    parts.append(f'<text x="{X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}" xml:space="preserve" '
+                 f'textLength="{6 * char:.1f}" lengthAdjust="spacingAndGlyphs"><tspan fill="{CYAN}">$</tspan> less</text>')
     lx = X0 + char * 7
     for level, color in enumerate(BEDS):
-        parts.append(f'<rect x="{lx:.1f}" y="{line2 - 19}" width="{BED}" height="{BED}" rx="4" fill="{color}"/>')
+        parts.append(f'<rect x="{lx:.1f}" y="{line2 - bed + 4:.1f}" width="{bed}" height="{bed}" rx="4" fill="{color}"/>')
         if level:
-            parts.append(f'<text x="{lx + BED / 2:.1f}" y="{line2 - 19 + BED * 0.74:.1f}" fill="#e6ffec" opacity=".85" '
-                         f'font-size="17" font-weight="700" text-anchor="middle">{CROPS[level]}</text>')
-        lx += BED + 8
+            parts.append(f'<text x="{lx + bed / 2:.1f}" y="{line2 - bed + 4 + bed * 0.74:.1f}" fill="#e6ffec" '
+                         f'opacity=".85" font-size="{crop_size}" font-weight="700" text-anchor="middle">{CROPS[level]}</text>')
+        lx += bed + 6
     parts.append(f'<text x="{lx + 6:.1f}" y="{line2}" font-size="{size - 2}" fill="{MUTED}">more  &#183;  one bed per day</text>')
     parts.append(f'<text x="{width - X0}" y="{line2}" font-size="{size - 2}" fill="{MUTED}" text-anchor="end">'
                  f'flock <tspan fill="{INK}" font-weight="700">3</tspan> + 1 chick &#183; on bug patrol</text>')
