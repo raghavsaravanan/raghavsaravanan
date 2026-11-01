@@ -1,13 +1,13 @@
 {
   "user": "raghavsaravanan",
-  "generated_at": "2026-10-31T12:48:49Z",
+  "generated_at": "2026-11-01T13:37:59Z",
   "range": {
-    "start": "2025-10-26",
-    "end": "2026-10-31"
+    "start": "2025-11-02",
+    "end": "2026-11-01"
   },
-  "total_contributions": 201,
-  "active_days": 25,
-  "avg_per_active_day": 8.0,
+  "total_contributions": 189,
+  "active_days": 24,
+  "avg_per_active_day": 7.9,
   "current_streak": {
     "length": 0,
     "start": null,
@@ -23,10 +23,6 @@
     "count": 52
   },
   "monthly": [
-    {
-      "month": "2025-11",
-      "total": 52
-    },
     {
       "month": "2025-12",
       "total": 8
@@ -70,6 +66,10 @@
     {
       "month": "2026-10",
       "total": 26
+    },
+    {
+      "month": "2026-11",
+      "total": 0
     }
   ],
   "repos": {
@@ -100,41 +100,6 @@
     ]
   },
   "days": [
-    {
-      "date": "2025-10-26",
-      "count": 0,
-      "level": 0
-    },
-    {
-      "date": "2025-10-27",
-      "count": 0,
-      "level": 0
-    },
-    {
-      "date": "2025-10-28",
-      "count": 0,
-      "level": 0
-    },
-    {
-      "date": "2025-10-29",
-      "count": 12,
-      "level": 3
-    },
-    {
-      "date": "2025-10-30",
-      "count": 0,
-      "level": 0
-    },
-    {
-      "date": "2025-10-31",
-      "count": 0,
-      "level": 0
-    },
-    {
-      "date": "2025-11-01",
-      "count": 0,
-      "level": 0
-    },
     {
       "date": "2025-11-02",
       "count": 0,
@@ -1952,6 +1917,11 @@
     },
     {
       "date": "2026-10-31",
+      "count": 0,
+      "level": 0
+    },
+    {
+      "date": "2026-11-01",
       "count": 0,
       "level": 0
     }
