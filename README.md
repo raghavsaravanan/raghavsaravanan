@@ -30,7 +30,6 @@
 </tr>
 <tr>
 <td><a href="https://github.com/raghavsaravanan/Issue-to-PR-Autonomous-Agent"><img src="./assets/projects/issue-to-pr.svg" width="400" alt="Issue-to-PR Agent: label a GitHub issue, get a test-verified pull request back." /></a></td>
-<td><a href="https://github.com/raghavsaravanan/George"><img src="./assets/projects/george.svg" width="400" alt="George: hands-free voice agent for auto mechanics, grounded in shop manuals." /></a></td>
 </tr>
 <tr>
 <td><a href="https://github.com/raghavsaravanan/Groovely"><img src="./assets/projects/groovely.svg" width="400" alt="Groovely: dance app with AI pose analysis and video challenges." /></a></td>
